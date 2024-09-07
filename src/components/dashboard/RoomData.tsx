@@ -1,15 +1,18 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function RoomData() {
-  const [selectedTab, setSelectedTab] = useState("feed");
+  const pathname = usePathname();
+  const router = useRouter();
+  const tab = pathname.split("/")[3];
 
   return (
     <div className="h-full flex flex-col overflow-y-auto">
       <Tabs
-        value={selectedTab}
+        value={tab}
         onValueChange={(value) => {
-          setSelectedTab(value);
+          router.push(pathname.replace(tab, value));
         }}
       >
         <TabsList>
@@ -20,7 +23,7 @@ export default function RoomData() {
           <TabsTrigger value="payments">Payments</TabsTrigger>
         </TabsList>
       </Tabs>
-      <div className="h-full overflow-y-scroll mt-4">Load the {selectedTab} here</div>
+      <div className="h-full overflow-y-scroll mt-4">Load the {tab} here</div>
     </div>
   );
 }
