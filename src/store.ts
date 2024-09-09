@@ -137,9 +137,9 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
       method: "GET",
       params: { room_id: selectedRoom!.id, cursor: reset ? undefined : payments.at(-1)?.id, take: 10 },
     });
-    setPayments([...payments, ...data.data]);
+    setPayments([...payments, ...data]);
     set({ tab_loading: false });
-    setReachedEnd(data.data.length === 0);
+    setReachedEnd(data.length === 0);
   },
 
   getRoomChatData: async ({ feed_id, reset }) => {
@@ -155,9 +155,9 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
       method: "GET",
       params: { room_id: selectedRoom?.id, feed_id, cursor: messages.at(0)?.id, take: 20 },
     });
-    setMessages([...data.data.reverse(), ...messages]);
+    setMessages([...data.reverse(), ...messages]);
     set({ tab_loading: false });
-    setReachedEnd(data.data.length === 0);
+    setReachedEnd(data.length === 0);
   },
 
   sendRoomMessage: async (message, feed_id) => {
@@ -187,7 +187,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
         search_file_name: search_text,
       },
     });
-    setFiles([...files, ...data.data]);
+    setFiles([...files, ...data]);
     set({ tab_loading: false });
   },
 
@@ -197,9 +197,9 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     if (reset) setMembers([]);
     set({ tab_loading: true });
     const data = await makeApiCall({ url: API_URLS.ROOM_MEMBERS, method: "GET", params: { room_id: selectedRoom!.id, cursor: members.at(-1)?.id, take: 30 } });
-    setMembers([...members, ...data.data]);
+    setMembers([...members, ...data]);
     set({ tab_loading: false });
-    setReachedEnd(data.data.length === 0);
+    setReachedEnd(data.length === 0);
   },
 
   getRoomMeetingsData: async () => {
@@ -207,7 +207,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     setMeetings([]);
     set({ tab_loading: true });
     const data = await makeApiCall({ url: API_URLS.ROOM_MEETINGS, method: "GET", params: { room_id: selectedRoom!.id } });
-    setMeetings(data.data);
+    setMeetings(data);
     set({ tab_loading: false });
   },
 
