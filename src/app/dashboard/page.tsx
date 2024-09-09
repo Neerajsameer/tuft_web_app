@@ -3,7 +3,6 @@
 import RoomData from "@/components/dashboard/RoomData";
 import RoomsList from "@/components/dashboard/RoomsList";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppStore } from "@/store";
 
 export default function Home() {

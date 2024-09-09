@@ -120,10 +120,11 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     if (tab_loading || reached_end) return;
     if (reset) setFeed([]);
     set({ tab_loading: true });
-    const data = await makeApiCall({ url: API_URLS.ROOM_FEED, method: "GET", params: { room_id: selectedRoom!.id, cursor: feed.at(-1)?.id, take: 10 } });
-    setFeed([...feed, ...data.data]);
+    const data = await makeApiCall({ url: API_URLS.ROOM_FEED, method: "GET", params: { room_id: 43, take: 10 } });
+    console.log({ feed: data });
+    setFeed([...feed, ...data]);
     set({ tab_loading: false });
-    setReachedEnd(data.data.length === 0);
+    setReachedEnd(data.length === 0);
   },
 
   getRoomPaymentsData: async ({ reset }) => {
