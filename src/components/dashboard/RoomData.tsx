@@ -66,6 +66,21 @@ export default function RoomData() {
         {tab === "feed" &&
           feed.map((item) => (
             <Card className="p-4 m-4 max-w-2xl mx-auto" key={item.id}>
+              {item.files && item.files.length > 0 && (
+                <div className="mb-4">
+                  {item.files.map((file) => (
+                    <Image
+                      key={file.id}
+                      src={file.file_url || '/path/to/default/image.jpg'}
+                      alt={file.file_name}
+                      width={0}
+                      height={0}
+                      sizes="100vw"
+                      className="w-full h-auto rounded-md object-cover"
+                    />
+                  ))}
+                </div>
+              )}
               <div className="flex items-center mb-2">
                 <Image
                   src={item.author.photo_url!}
@@ -79,9 +94,12 @@ export default function RoomData() {
                   <p className="text-sm text-gray-500">{new Date(item.created_at).toLocaleString()}</p>
                 </div>
               </div>
-              <p>{item.message}</p>
+              <p className="mt-2">{item.message}</p>
               <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
-                <button className="flex items-center text-gray-500 hover:text-blue-500">
+                <button 
+                  className={`flex items-center ${item.user_liked ? 'text-blue-500' : 'text-gray-500'} hover:text-blue-500`}
+                  onClick={() => useAppStore.getState().addLikeToFeed(item.id)}
+                >
                   <ThumbsUpIcon className="w-5 h-5 mr-1" />
                   <span>{item.likes || 0}</span>
                 </button>
@@ -93,12 +111,10 @@ export default function RoomData() {
                   <EyeIcon className="w-5 h-5 mr-1" />
                   <span>{item.views || 0}</span>
                 </div>
-                {item.files && item.files.length > 0 && (
-                  <button className="flex items-center text-gray-500 hover:text-blue-500">
-                    <LinkIcon className="w-5 h-5 mr-1" />
-                    <span>{item.files.length}</span>
-                  </button>
-                )}
+                <button className="flex items-center text-gray-500 hover:text-blue-500">
+                  <LinkIcon className="w-5 h-5 mr-1" />
+                  <span>{(item.files && item.files.length) || 0}</span>
+                </button>
               </div>
             </Card>
           ))}
