@@ -3,6 +3,8 @@ import { useAppStore } from "@/store";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from "../ui/card";
+import Image from "next/image"; // Import Image component for avatar
+import { ThumbsUpIcon, MessageSquareIcon, EyeIcon, LinkIcon } from "lucide-react";
 
 export default function RoomData() {
   const pathname = usePathname();
@@ -18,7 +20,7 @@ export default function RoomData() {
     payments, 
     meetings, 
     files, 
-    messages 
+    messages
   } = useAppStore();
 
   const [tab, setTab] = useState("feed");
@@ -63,32 +65,65 @@ export default function RoomData() {
       <div className="h-full overflow-y-scroll mt-4">
         {tab === "feed" &&
           feed.map((item) => (
-            <Card className="p-4 m-4" key={item.id}>
-              <h1>{item.message}</h1>
+            <Card className="p-4 m-4 max-w-2xl mx-auto" key={item.id}>
+              <div className="flex items-center mb-2">
+                <Image
+                  src={item.author.photo_url!}
+                  alt={item.author.name}
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+                <div className="ml-2">
+                  <h2 className="text-lg font-semibold">{item.author.name}</h2>
+                  <p className="text-sm text-gray-500">{new Date(item.created_at).toLocaleString()}</p>
+                </div>
+              </div>
+              <p>{item.message}</p>
+              <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
+                <button className="flex items-center text-gray-500 hover:text-blue-500">
+                  <ThumbsUpIcon className="w-5 h-5 mr-1" />
+                  <span>{item.likes || 0}</span>
+                </button>
+                <button className="flex items-center text-gray-500 hover:text-blue-500">
+                  <MessageSquareIcon className="w-5 h-5 mr-1" />
+                  <span>{item.comments || 0}</span>
+                </button>
+                <div className="flex items-center text-gray-500">
+                  <EyeIcon className="w-5 h-5 mr-1" />
+                  <span>{item.views || 0}</span>
+                </div>
+                {item.files && item.files.length > 0 && (
+                  <button className="flex items-center text-gray-500 hover:text-blue-500">
+                    <LinkIcon className="w-5 h-5 mr-1" />
+                    <span>{item.files.length}</span>
+                  </button>
+                )}
+              </div>
             </Card>
           ))}
         {tab === "chat" &&
           messages.map((message) => (
             <Card className="p-4 m-4" key={message.id}>
-              <h1>{message.content}</h1>
+              <h1>{message.message}</h1>
             </Card>
           ))}
         {tab === "files" &&
           files.map((file) => (
             <Card className="p-4 m-4" key={file.id}>
-              <h1>{file.name}</h1>
+              <h1>{file.file_name}</h1>
             </Card>
           ))}
         {tab === "meetings" &&
           meetings.map((meeting) => (
             <Card className="p-4 m-4" key={meeting.id}>
-              <h1>{meeting.title}</h1>
+              <h1>{meeting.name}</h1>
             </Card>
           ))}
         {tab === "payments" &&
           payments.map((payment) => (
             <Card className="p-4 m-4" key={payment.id}>
-              <h1>{payment.payment_detail}</h1>
+              <h1>{payment.payment.name}</h1>
             </Card>
           ))}
       </div>
