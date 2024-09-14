@@ -135,7 +135,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     const data = await makeApiCall({
       url: API_URLS.ROOM_PAYMENTS,
       method: "GET",
-      params: { room_id: selectedRoom!.id, cursor: reset ? undefined : payments.at(-1)?.id, take: 10 },
+      params: { room_id: 43, cursor: reset ? undefined : payments.at(-1)?.id, take: 10 },
     });
     setPayments([...payments, ...data]);
     set({ tab_loading: false });
@@ -153,7 +153,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     const data = await makeApiCall({
       url: API_URLS.ROOM_CHAT,
       method: "GET",
-      params: { room_id: selectedRoom?.id, feed_id, cursor: messages.at(0)?.id, take: 20 },
+      params: { room_id: 43, feed_id, cursor: messages.at(0)?.id, take: 20 },
     });
     setMessages([...data.reverse(), ...messages]);
     set({ tab_loading: false });
@@ -180,7 +180,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
       url: API_URLS.ROOM_FILES,
       method: "GET",
       params: {
-        room_id: selectedRoom!.id,
+        room_id: 43,
         parent_id: parent_folder_id,
         skip: files.length,
         take: 50,
@@ -206,7 +206,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     const { setMeetings, selectedRoom } = get();
     setMeetings([]);
     set({ tab_loading: true });
-    const data = await makeApiCall({ url: API_URLS.ROOM_MEETINGS, method: "GET", params: { room_id: selectedRoom!.id } });
+    const data = await makeApiCall({ url: API_URLS.ROOM_MEETINGS, method: "GET", params: { room_id: 43 } });
     setMeetings(data);
     set({ tab_loading: false });
   },
