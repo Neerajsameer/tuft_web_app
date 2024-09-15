@@ -1,13 +1,14 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppStore } from "@/store";
+import { EyeIcon, FileIcon, FolderIcon, ImageIcon, LinkIcon, MessageSquareIcon, ThumbsUpIcon } from "lucide-react";
+import Image from "next/image"; // Import Image component for avatar
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { Card } from "../ui/card";
-import Image from "next/image"; // Import Image component for avatar
-import { ThumbsUpIcon, MessageSquareIcon, EyeIcon, LinkIcon, FolderIcon, FileTextIcon, FileIcon, FileSpreadsheetIcon, ImageIcon } from "lucide-react";
 
 // Define the type for file extensions
-type FileExtension = 'folder' | 'pdf' | 'doc' | 'docx' | 'xls' | 'xlsx' | 'jpg' | 'jpeg' | 'png' | 'gif' | 'link';
+type FileExtension = "folder" | "pdf" | "doc" | "docx" | "xls" | "xlsx" | "jpg" | "jpeg" | "png" | "gif" | "link";
 
 // Ensure the file object uses this type
 interface File {
@@ -20,24 +21,13 @@ interface File {
 export default function RoomData() {
   const pathname = usePathname();
   const router = useRouter();
-  
-  const { 
-    feed, 
-    getRoomFeedData, 
-    getRoomChatData, 
-    getRoomFilesData, 
-    getRoomMeetingsData, 
-    getRoomPaymentsData, 
-    payments, 
-    meetings, 
-    files, 
-    messages
-  } = useAppStore();
+
+  const { feed, getRoomFeedData, getRoomChatData, getRoomFilesData, getRoomMeetingsData, getRoomPaymentsData, payments, meetings, files, messages } = useAppStore();
 
   const [tab, setTab] = useState("feed");
 
   useEffect(() => {
-    switch(tab) {
+    switch (tab) {
       case "feed":
         getRoomFeedData({ reset: true });
         break;
@@ -74,68 +64,62 @@ export default function RoomData() {
         </TabsList>
       </Tabs>
       <div className="h-full overflow-y-scroll mt-4">
-        {tab === "feed" &&
-          feed.map((item) => (
-            <Card className="p-4 m-4 max-w-2xl mx-auto" key={item.id}>
-              {item.files && item.files.length > 0 && (
-                <div className="mb-4">
-                  {item.files.map((file) => (
-                    <Image
-                      key={file.id}
-                      src={file.file_url || '/path/to/default/image.jpg'}
-                      alt={file.file_name}
-                      width={0}
-                      height={0}
-                      sizes="100vw"
-                      className="w-full h-auto rounded-md object-cover"
-                    />
-                  ))}
+        {tab === "feed" && (
+          <div className="flex flex-col gap-4 overflow-x-hidden">
+            {feed.map((item) => (
+              <Card className="p-4 max-w-xl" key={item.id}>
+                <div className="flex items-center mb-4">
+                  <Image src={item.author.photo_url!} alt={item.author.name} width={0} height={0} sizes="100vw" className="w-10 h-10 object-cover rounded-full" />
+                  <div className="ml-2">
+                    <h2 className="text-lg font-semibold">{item.author.name}</h2>
+                    <p className="text-sm text-gray-500">{new Date(item.created_at).toLocaleString()}</p>
+                  </div>
                 </div>
-              )}
-              <div className="flex items-center mb-2">
-                <Image
-                  src={item.author.photo_url!}
-                  alt={item.author.name}
-                  width={40}
-                  height={40}
-                  className="rounded-full"
-                />
-                <div className="ml-2">
-                  <h2 className="text-lg font-semibold">{item.author.name}</h2>
-                  <p className="text-sm text-gray-500">{new Date(item.created_at).toLocaleString()}</p>
-                </div>
-              </div>
-              <p className="mt-2">
-                {item.message ? item.message.split(' ').map((word, index) => {
-                  if (word.startsWith('http://') || word.startsWith('https://')) {
-                    return <a key={index} href={word} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{word} </a>;
-                  }
-                  return word + ' '; // Add this line to return non-URL words
-                }) : null}
-              </p>
-              <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
-                <button 
-                  className={`flex items-center ${item.user_liked ? 'text-blue-500' : 'text-gray-500'} hover:text-blue-500`}
-                  onClick={() => useAppStore.getState().addLikeToFeed(item.id)}
+                {item.files && item.files.length > 0 && (
+                  <div className="mb-4">
+                    {item.files.map((file) => (
+                      <Image
+                        key={file.id}
+                        src={file.file_url || "/path/to/default/image.jpg"}
+                        alt={file.file_name}
+                        width={0}
+                        height={0}
+                        sizes="100vw"
+                        className="w-full h-auto rounded-md object-cover"
+                      />
+                    ))}
+                  </div>
+                )}
+                <ReactMarkdown
+                  className="mt-2 whitespace-pre-line"
+                  components={{
+                    a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline" />,
+                  }}
                 >
-                  <ThumbsUpIcon className="w-5 h-5 mr-1" />
-                  <span>{item.likes || 0}</span>
-                </button>
-                <button className="flex items-center">
-                  <MessageSquareIcon className="w-5 h-5 mr-1" />
-                  <span>{item.comments || 0}</span>
-                </button>
-                <button className="flex items-center">
-                  <EyeIcon className="w-5 h-5 mr-1" />
-                  <span>{item.views || 0}</span>
-                </button>
-                <button className="flex items-center">
-                  <LinkIcon className="w-5 h-5 mr-1" />
-                  <span>{item.shares || 0}</span>
-                </button>
-              </div>
-            </Card>
-          ))}
+                  {item.message || ""}
+                </ReactMarkdown>
+                <div className="flex gap-16 items-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    className={`flex items-center ${item.user_liked ? "text-blue-500" : "text-gray-500"} hover:text-blue-500`}
+                    onClick={() => useAppStore.getState().addLikeToFeed(item.id)}
+                  >
+                    {item.user_liked ? <ThumbsUpIcon fill="#1098f3" className="w-5 h-5 mr-1" /> : <ThumbsUpIcon className="w-5 h-5 mr-1" />}
+                    <span>{item.likes || 0}</span>
+                  </button>
+                  <button className="flex items-center">
+                    <MessageSquareIcon className="w-5 h-5 mr-1" />
+                    <span>{item.comments || 0}</span>
+                  </button>
+                  <button className="flex items-center">
+                    <EyeIcon className="w-5 h-5 mr-1" />
+                    <span>{item.views || 0}</span>
+                  </button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
         {tab === "chat" &&
           messages.map((message) => (
             <Card className="p-4 m-4" key={message.id}>
@@ -145,11 +129,11 @@ export default function RoomData() {
         {tab === "files" && (
           <div className="flex flex-wrap">
             {files.map((file: File) => (
-              <Card 
-                className="flex flex-col items-center justify-center p-4 m-2 w-48 h-48 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" 
+              <Card
+                className="flex flex-col items-center justify-center p-4 m-2 w-48 h-48 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 key={file.id}
                 onClick={() => {
-                  if (file.file_extension === 'folder') {
+                  if (file.file_extension === "folder") {
                     useAppStore.getState().getRoomFilesData({ parent_folder_id: file.id, reset: true });
                   } else {
                     // Handle file click, e.g., download or preview
@@ -157,9 +141,9 @@ export default function RoomData() {
                   }
                 }}
               >
-                {file.file_extension === 'folder' ? (
+                {file.file_extension === "folder" ? (
                   <FolderIcon className="w-12 h-12 mb-3 text-yellow-500" />
-                ) : ['jpg', 'jpeg', 'png', 'gif'].includes(file.file_extension) ? (
+                ) : ["jpg", "jpeg", "png", "gif"].includes(file.file_extension) ? (
                   <ImageIcon className="w-12 h-12 mb-3 text-purple-500" />
                 ) : (
                   <FileIcon className="w-12 h-12 mb-3 text-gray-500" />

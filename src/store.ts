@@ -130,16 +130,14 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
   getRoomPaymentsData: async ({ reset }) => {
     const { setPayments, setReachedEnd, selectedRoom, payments, tab_loading, reached_end } = get();
     if (tab_loading || reached_end || !reset) return;
-    if (reset) setPayments([]);
-    set({ tab_loading: true });
+    set({ tab_loading: true, payments: reset ? [] : payments });
     const data = await makeApiCall({
       url: API_URLS.ROOM_PAYMENTS,
       method: "GET",
       params: { room_id: 43, cursor: reset ? undefined : payments.at(-1)?.id, take: 10 },
     });
-    setPayments([...payments, ...data]);
-    set({ tab_loading: false });
-    setReachedEnd(data.length === 0);
+
+    set({ tab_loading: false, payments: reset ? data : [...payments, ...data], reached_end: data.length === 0 });
   },
 
   getRoomChatData: async ({ feed_id, reset }) => {
