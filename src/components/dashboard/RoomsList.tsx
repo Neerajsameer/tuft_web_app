@@ -22,12 +22,12 @@ export default function RoomsList() {
           }}
         >
           <img src={room.avatar ?? "https://pub-3a63e4a193254663a7631829c69adb4a.r2.dev/no_icon.png"} alt={room.name} className="w-8 h-8 object-cover rounded-full" />
-          <span>{room.name}</span>
+          <div className="flex flex-col">
+            <span className="text-lg font-semibold">{room.name}</span>
+            <span className="text-sm text-gray-500 line-clamp-2">{room.short_description}</span>
+          </div>
         </Card>
       ))}
     </div>
   );
 }
-
-
-
