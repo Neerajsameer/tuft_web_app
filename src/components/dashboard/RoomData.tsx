@@ -4,16 +4,20 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from "../ui/card";
 import Image from "next/image"; // Import Image component for avatar
-import { ThumbsUpIcon, MessageSquareIcon, EyeIcon, LinkIcon, FolderIcon, FileTextIcon, FileIcon, FileSpreadsheetIcon, ImageIcon } from "lucide-react";
+import { BookOpen, MessageCircle, ThumbsUpIcon, MessageSquareIcon, EyeIcon, LinkIcon, FolderIcon, FileTextIcon, FileIcon, FileSpreadsheetIcon, ImageIcon } from "lucide-react";
 
 // Define the type for file extensions
 type FileExtension = 'folder' | 'pdf' | 'doc' | 'docx' | 'xls' | 'xlsx' | 'jpg' | 'jpeg' | 'png' | 'gif' | 'link';
+
+// Define the type for file types
+type FileType = 'subject' | 'chat_media' | 'feed_media' | 'DOCUMENT'; // Ensure these match the string literals used
 
 // Ensure the file object uses this type
 interface File {
   id: string;
   file_name: string;
   file_extension: FileExtension;
+  file_type: FileType; // Update this line
   // other properties...
 }
 
@@ -143,28 +147,23 @@ export default function RoomData() {
             </Card>
           ))}
         {tab === "files" && (
-          <div className="flex flex-wrap">
-            {files.map((file: File) => (
-              <Card 
-                className="flex flex-col items-center justify-center p-4 m-2 w-48 h-48 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" 
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
+            {files.map((file) => (
+              <Card
+                className="p-6 flex flex-col items-center justify-between h-48 cursor-pointer"
                 key={file.id}
                 onClick={() => {
-                  if (file.file_extension === 'folder') {
-                    useAppStore.getState().getRoomFilesData({ parent_folder_id: file.id, reset: true });
-                  } else {
-                    // Handle file click, e.g., download or preview
-                    console.log(`Clicked file: ${file.file_name}`);
-                  }
+                  useAppStore.getState().getRoomFilesData({ parent_folder_id: file.id, reset: true });
+                  console.log(`File clicked: ${file.file_name}`);
                 }}
               >
-                {file.file_extension === 'folder' ? (
-                  <FolderIcon className="w-12 h-12 mb-3 text-yellow-500" />
-                ) : ['jpg', 'jpeg', 'png', 'gif'].includes(file.file_extension) ? (
-                  <ImageIcon className="w-12 h-12 mb-3 text-purple-500" />
-                ) : (
-                  <FileIcon className="w-12 h-12 mb-3 text-gray-500" />
-                )}
-                <h1 className="text-center truncate w-full">{file.file_name}</h1>
+                <FolderIcon className="w-16 h-16 mb-4 text-blue-500" />
+                <div className="w-full text-center">
+                  <h2 className="text-sm font-medium truncate">{file.file_name}</h2>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {new Date(file.created_at).toLocaleDateString()}
+                  </p>
+                </div>
               </Card>
             ))}
           </div>
