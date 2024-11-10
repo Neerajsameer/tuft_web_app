@@ -1,32 +1,31 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAppStore } from "@/store";
-import { usePathname, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import FeedTab from "./FeedTab";
+import MeetingsTab from "./MeetingsTab";
+import PaymentsTab from "./PaymentsTab";
 import { useEffect, useState } from "react";
-import { Card } from "../ui/card";
+import ChatTab from "./ChatTab";
+import { useAppStore } from "@/store";
+import FilesTab from "./FilesTab";
 
 export default function RoomData() {
-  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
-  // const tab = pathname.split("/")[3];
-
-  const { feed, getRoomFeedData, getRoomChatData } = useAppStore();
-
-  const [tab, setTab] = useState("feed");
+  const [tab, setTab] = useState("");
 
   useEffect(() => {
-    if (tab === "feed") getRoomFeedData({ reset: true });
-    // if (tab === "chat") getRoomChatData({ reset: true });
-  }, [tab]);
+    const tab = window.location.pathname.split("/").pop() || "feed";
+    setTab(tab);
+  }, [searchParams]);
+
+  const handleTabChange = (value: string) => {
+    setTab(value);
+    router.push(window.location.pathname.replace(tab, value));
+  };
 
   return (
     <div className="h-full flex flex-col overflow-y-auto">
-      <Tabs
-        value={tab}
-        onValueChange={(value) => {
-          // router.push(pathname.replace(tab, value));
-          setTab(value);
-        }}
-      >
+      <Tabs value={tab} onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="feed">Feed</TabsTrigger>
           <TabsTrigger value="chat">Chat</TabsTrigger>
@@ -36,12 +35,11 @@ export default function RoomData() {
         </TabsList>
       </Tabs>
       <div className="h-full overflow-y-scroll mt-4">
-        {tab === "feed" &&
-          feed.map((item) => (
-            <Card className="p-4 m-4" key={item.id}>
-              <h1>{item.message}</h1>
-            </Card>
-          ))}
+        {tab === "feed" && <FeedTab />}
+        {tab === "chat" && <ChatTab />}
+        {tab === "files" && <FilesTab />}
+        {tab === "meetings" && <MeetingsTab />}
+        {tab === "payments" && <PaymentsTab />}
       </div>
     </div>
   );

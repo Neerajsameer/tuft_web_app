@@ -2,12 +2,16 @@
 const nextConfig = {
   reactStrictMode: false,
   async rewrites() {
-    return [ 
+    return [
+      {
+        source: '/meeting/:meeting_id',
+        destination: '/meeting/:meeting_id',
+      },
       {
         source: '/:any*',
         destination: '/dashboard',
       },
-    ]
+    ];
   },
   images: {
     remotePatterns: [

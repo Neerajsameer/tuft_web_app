@@ -47,11 +47,14 @@ type AppActions = {
   sendRoomMessage: (message: string, feed_id?: number) => Promise<void>;
   getRoomFilesData: (options: { parent_folder_id: string | null; reset?: boolean; search_text?: string }) => Promise<void>;
   getRoomMembersData: (options: { reset?: boolean }) => Promise<void>;
-  getRoomMeetingsData: () => Promise<void>;
+  getRoomMeetingsData: (options: { reset?: boolean }) => Promise<void>;
   createFolder: (parent_folder_id: string | null, folder_name: string) => Promise<void>;
   getUserRoomsData: () => Promise<void>;
   addLikeToFeed: (feed_id: number) => Promise<void>;
+  getNewerMessages: () => Promise<boolean>;
 };
+
+const PAGE_SIZE = 10;
 
 export const useAppStore = create<AppState & AppActions>((set, get) => ({
   tab_loading: false,
@@ -117,29 +120,56 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
 
   getRoomFeedData: async ({ reset }) => {
     const { setFeed, setReachedEnd, selectedRoom, feed, tab_loading, reached_end } = get();
-    if (tab_loading || reached_end) return;
+    if (tab_loading || (!reset && reached_end)) return;
+
     if (reset) setFeed([]);
     set({ tab_loading: true });
-    const data = await makeApiCall({ url: API_URLS.ROOM_FEED, method: "GET", params: { room_id: 43, take: 10 } });
-    console.log({ feed: data });
-    setFeed([...feed, ...data]);
+
+    const data = await makeApiCall({
+      url: API_URLS.ROOM_FEED,
+      method: "GET",
+      params: {
+        room_id: selectedRoom?.id,
+        cursor: reset ? undefined : feed.at(-1)?.id,
+        take: PAGE_SIZE,
+      },
+    });
+
+    if (reset) {
+      setFeed(data);
+    } else {
+      setFeed([...feed, ...data]);
+    }
+
     set({ tab_loading: false });
     setReachedEnd(data.length === 0);
   },
 
   getRoomPaymentsData: async ({ reset }) => {
     const { setPayments, setReachedEnd, selectedRoom, payments, tab_loading, reached_end } = get();
-    if (tab_loading || reached_end || !reset) return;
+    if (tab_loading || (!reset && reached_end)) return;
+
     if (reset) setPayments([]);
     set({ tab_loading: true });
+
     const data = await makeApiCall({
       url: API_URLS.ROOM_PAYMENTS,
       method: "GET",
-      params: { room_id: selectedRoom!.id, cursor: reset ? undefined : payments.at(-1)?.id, take: 10 },
+      params: {
+        room_id: selectedRoom!.id,
+        cursor: reset ? undefined : payments.at(-1)?.id,
+        take: PAGE_SIZE,
+      },
     });
-    setPayments([...payments, ...data.data]);
+
+    if (reset) {
+      setPayments(data);
+    } else {
+      setPayments([...payments, ...data]);
+    }
+
     set({ tab_loading: false });
-    setReachedEnd(data.data.length === 0);
+    setReachedEnd(data.length < PAGE_SIZE);
   },
 
   getRoomChatData: async ({ feed_id, reset }) => {
@@ -153,11 +183,11 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     const data = await makeApiCall({
       url: API_URLS.ROOM_CHAT,
       method: "GET",
-      params: { room_id: selectedRoom?.id, feed_id, cursor: messages.at(0)?.id, take: 20 },
+      params: { room_id: selectedRoom?.id, feed_id, cursor: messages.at(0)?.id, take: PAGE_SIZE },
     });
-    setMessages([...data.data.reverse(), ...messages]);
+    setMessages([...data.reverse(), ...messages]);
     set({ tab_loading: false });
-    setReachedEnd(data.data.length === 0);
+    setReachedEnd(data.length < PAGE_SIZE);
   },
 
   sendRoomMessage: async (message, feed_id) => {
@@ -168,12 +198,12 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
       body: { message },
       params: { room_id: selectedRoom?.id, feed_id },
     });
-    setMessages([...messages, messageResponse.data]);
+    setMessages([...messages, messageResponse]);
   },
 
   getRoomFilesData: async ({ parent_folder_id, reset, search_text }) => {
-    const { setFiles, selectedRoom, files, tab_loading } = get();
-    if (tab_loading) return;
+    const { setFiles, selectedRoom, files, tab_loading, reached_end, setReachedEnd } = get();
+    if ((tab_loading || reached_end) && !reset) return;
     if (reset) setFiles([]);
     set({ tab_loading: true });
     const data = await makeApiCall({
@@ -182,13 +212,16 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
       params: {
         room_id: selectedRoom!.id,
         parent_id: parent_folder_id,
-        skip: files.length,
+        skip: reset ? 0 : files.length,
         take: 50,
         search_file_name: search_text,
       },
     });
-    setFiles([...files, ...data.data]);
+    if (reset) setFiles(data);
+    else setFiles([...files, ...data]);
+
     set({ tab_loading: false });
+    setReachedEnd(data.length < 50);
   },
 
   getRoomMembersData: async ({ reset }) => {
@@ -199,16 +232,31 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     const data = await makeApiCall({ url: API_URLS.ROOM_MEMBERS, method: "GET", params: { room_id: selectedRoom!.id, cursor: members.at(-1)?.id, take: 30 } });
     setMembers([...members, ...data.data]);
     set({ tab_loading: false });
-    setReachedEnd(data.data.length === 0);
+    setReachedEnd(data.data.length < PAGE_SIZE);
   },
 
-  getRoomMeetingsData: async () => {
-    const { setMeetings, selectedRoom } = get();
-    setMeetings([]);
+  getRoomMeetingsData: async ({ reset }) => {
+    const { setMeetings, setReachedEnd, selectedRoom, meetings, tab_loading, reached_end } = get();
+    if (tab_loading || (!reset && reached_end)) return;
+
+    if (reset) setMeetings([]);
     set({ tab_loading: true });
-    const data = await makeApiCall({ url: API_URLS.ROOM_MEETINGS, method: "GET", params: { room_id: selectedRoom!.id } });
-    setMeetings(data.data);
+
+    const data = await makeApiCall({
+      url: API_URLS.ROOM_MEETINGS,
+      method: "GET",
+      params: {
+        room_id: selectedRoom!.id,
+        cursor: reset ? undefined : meetings.at(-1)?.id,
+        take: PAGE_SIZE,
+      },
+    });
+
+    if (reset) setMeetings(data);
+    else setMeetings([...meetings, ...data]);
+
     set({ tab_loading: false });
+    setReachedEnd(data.length < PAGE_SIZE);
   },
 
   createFolder: async (parent_folder_id, folder_name) => {
@@ -244,5 +292,31 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
       params: { feed_id: feed_id },
     });
     setIncFeedLikes(feed_id);
+  },
+
+  // Add this new function to check for newer messages
+  getNewerMessages: async () => {
+    const { setMessages, selectedRoom, messages } = get();
+    try {
+      const data = await makeApiCall({
+        url: API_URLS.ROOM_CHAT,
+        method: "GET",
+        params: {
+          room_id: selectedRoom?.id,
+          listener: true,
+          cursor: messages.at(-1)?.id, // Get messages after the last message
+          take: PAGE_SIZE,
+        },
+      });
+
+      if (data.length > 0) {
+        setMessages([...messages, ...data.reverse()]);
+        return true; // Return true if new messages were added
+      }
+      return false; // Return false if no new messages
+    } catch (error) {
+      console.error("Error fetching new messages:", error);
+      return false;
+    }
   },
 }));
